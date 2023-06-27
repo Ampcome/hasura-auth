@@ -15,6 +15,7 @@ import { Joi, phoneNumber, registrationOptions } from '@/validation';
 import { isTestingPhoneNumber, isVerifySid } from '@/utils/twilio';
 import { logger } from '@/logger';
 import { renderTemplate } from '@/templates';
+import { sendOTP } from './kapsystem';
 
 export type PasswordLessSmsRequestBody = {
   phoneNumber: string;
@@ -68,7 +69,7 @@ export const signInPasswordlessSmsHandler: RequestHandler<
 
   // set otp for user that will be sent in the email
   const { otp, otpHash, otpHashExpiresAt } = await getNewOneTimePasswordData();
-
+  console.log(otp, 'otp');
   await gqlSdk.updateUser({
     id: user.id,
     user: {
@@ -79,13 +80,7 @@ export const signInPasswordlessSmsHandler: RequestHandler<
   });
 
   if (isTestingPhoneNumber(user.phoneNumber)) {
-    const template = 'signin-passwordless-sms';
-    const message =
-      (await renderTemplate(`${template}/text`, {
-        locale: user.locale ?? ENV.AUTH_LOCALE_DEFAULT,
-        displayName: user.displayName,
-        code: otp,
-      })) ?? `Your code is ${otp}`;
+    const message = `Here is your OTP to acccess MYCENTA - ${otp}`;
 
     logger.info(`Message to ${user.phoneNumber}: ${message}`);
     return res.json(ReasonPhrases.OK);
@@ -93,48 +88,65 @@ export const signInPasswordlessSmsHandler: RequestHandler<
 
   if (!ENV.AUTH_SMS_PROVIDER) {
     throw Error('No sms provider set');
-  }
+  } else if (ENV.AUTH_SMS_PROVIDER === 'kapsystem') {
+    try {
+      // const message = `Here is your OTP to acccess MYCENTA - ${otp}`;
+      const kres = await sendOTP(phoneNumber, otp);
+      console.log('kap res', JSON.stringify(kres));
+    } catch (error: any) {
+      logger.error('Error sending sms');
+      logger.error(error);
 
-  const twilioClient = twilio(
-    ENV.AUTH_SMS_TWILIO_ACCOUNT_SID,
-    ENV.AUTH_SMS_TWILIO_AUTH_TOKEN
-  );
+      // delete user that was inserted because we were not able to send the SMS
+      if (!userExists) {
+        await gqlSdk.deleteUser({
+          userId: user.id,
+        });
+      }
+      return sendError(res, 'cannot-send-sms');
+    }
+  } else {
+    const twilioClient = twilio(
+      ENV.AUTH_SMS_TWILIO_ACCOUNT_SID,
+      ENV.AUTH_SMS_TWILIO_AUTH_TOKEN
+    );
 
-  try {
-    const messagingServiceSid = ENV.AUTH_SMS_TWILIO_MESSAGING_SERVICE_ID;
+    try {
+      const messagingServiceSid = ENV.AUTH_SMS_TWILIO_MESSAGING_SERVICE_ID;
 
-    if (isVerifySid(messagingServiceSid)) {
-      await twilioClient.verify
-        .services(messagingServiceSid)
-        .verifications.create({
-          channel: 'sms',
+      if (isVerifySid(messagingServiceSid)) {
+        await twilioClient.verify
+          .services(messagingServiceSid)
+          .verifications.create({
+            channel: 'sms',
+            to: phoneNumber,
+          });
+      } else {
+        const template = 'signin-passwordless-sms';
+        const message = await renderTemplate(`${template}/text`, {
+          locale: user.locale ?? ENV.AUTH_LOCALE_DEFAULT,
+          displayName: user.displayName,
+          code: otp,
+        });
+
+        await twilioClient.messages.create({
+          body: message ?? `Your code is ${otp}`,
+          from: ENV.AUTH_SMS_TWILIO_MESSAGING_SERVICE_ID,
           to: phoneNumber,
         });
-    } else {
-      const template = 'signin-passwordless-sms';
-      const message = await renderTemplate(`${template}/text`, {
-        locale: user.locale ?? ENV.AUTH_LOCALE_DEFAULT,
-        displayName: user.displayName,
-        code: otp,
-      });
+      }
+    } catch (error: any) {
+      logger.error('Error sending sms');
+      logger.error(error);
 
-      await twilioClient.messages.create({
-        body: message ?? `Your code is ${otp}`,
-        from: ENV.AUTH_SMS_TWILIO_MESSAGING_SERVICE_ID,
-        to: phoneNumber,
-      });
+      // delete user that was inserted because we were not able to send the SMS
+      if (!userExists) {
+        await gqlSdk.deleteUser({
+          userId: user.id,
+        });
+      }
+      return sendError(res, 'cannot-send-sms');
     }
-  } catch (error: any) {
-    logger.error('Error sending sms');
-    logger.error(error);
-
-    // delete user that was inserted because we were not able to send the SMS
-    if (!userExists) {
-      await gqlSdk.deleteUser({
-        userId: user.id,
-      });
-    }
-    return sendError(res, 'cannot-send-sms');
   }
 
   return res.json(ReasonPhrases.OK);

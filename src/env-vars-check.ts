@@ -58,6 +58,22 @@ if (ENV.AUTH_SMS_PROVIDER) {
         );
       }
     });
+  } else if (ENV.AUTH_SMS_PROVIDER === 'kapsystem') {
+    [
+      'AUTH_SMS_KAPSYSTEM_USERNAME',
+      'AUTH_SMS_KAPSYSTEM_PASSWORD',
+      'AUTH_SMS_KAPSYSTEM_SENDERID',
+      'AUTH_SMS_KAPSYSTEM_ENTITYID',
+      'AUTH_SMS_KAPSYSTEM_HEADERID',
+      'AUTH_SMS_KAPSYSTEM_TMID',
+      'AUTH_SMS_KAPSYSTEM_TEMPLATEID',
+    ].forEach((env) => {
+      if (isUnset(process.env[env])) {
+        errors.push(
+          `Env var ${env} is required when the Twilio is set as SMS provider, but no value was provided`
+        );
+      }
+    });
   } else {
     errors.push(
       `Incorrect SMS provider - AUTH_SMS_PROVIDER of value '${ENV.AUTH_SMS_PROVIDER}' is not one of the supported. Supported providers are: 'twilio'`
