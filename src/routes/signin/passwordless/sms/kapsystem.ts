@@ -14,7 +14,7 @@ export async function sendOTP(phone: string, code: string): Promise<any> {
   };
 
   // const message = `Here%20is%20your%20OTP%20to%20access%20MyCENTA%20(CENTA%27s%20online%20platform%20for%20teachers):%20${code}%20`;
-  const message = `${code}is%20your%20OTP%20to%20access%20the%20CENTA%20APP/%20register%20for%20CENTA's%20International%20TPO/%20assessments/%20learning%20products.%20hHA4DwnSYbu`;
+  const message = `${code}%20is%20your%20OTP%20to%20access%20the%20CENTA%20APP/%20register%20for%20CENTA's%20International%20TPO/%20assessments/%20learning%20products.%20hHA4DwnSYbu`;
 
   // const params = new URLSearchParams(options);
 
