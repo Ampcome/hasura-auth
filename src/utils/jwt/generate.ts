@@ -40,7 +40,7 @@ const generateHasuraClaims = async (
   const allowedRoles = user.roles.map((role) => role.role);
 
   // add user's default role to allowed roles
-  if (!allowedRoles.includes(user.defaultRole)) {
+  if (user.defaultRole && !allowedRoles.includes(user.defaultRole)) {
     allowedRoles.push(user.defaultRole);
   }
 

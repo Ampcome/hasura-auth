@@ -34,7 +34,7 @@ export const getNewOrUpdateCurrentSession = async ({
   //   },
   // });
   // const sessionUser = await getUser({ userId: user.id });
-  let u : User = user as unknown as User;
+  let u: User = { ...user } as unknown as User;
   u.roles = user.roles.map(r => r.role)
   const accessToken = await createHasuraAccessToken(user);
   const { refreshToken, id: refreshTokenId } =
