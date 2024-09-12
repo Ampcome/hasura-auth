@@ -1,5 +1,5 @@
 import { User } from '@/types';
-import { gqlSdk } from '../gql-sdk';
+// import { gqlSdk } from '../gql-sdk';
 import database from '../database';
 
 export const getUserByPhoneNumber = async ({
