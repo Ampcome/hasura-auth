@@ -14,3 +14,4 @@ export * from './async-wrapper';
 export * from './webauthn';
 export * from './hasura-metadata';
 export * from './refresh-token';
+export * from './database';

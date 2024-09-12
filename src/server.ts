@@ -15,12 +15,13 @@ export const start = async () => {
   // if (ENV.AUTH_SKIP_INIT) {
   //   logger.info(`Skipping migrations and metadata`);
   // } else {
-  const { waitForHasura } = await import('@/utils');
+  const { waitForHasura, waitForDatabase } = await import('@/utils');
   const { applyMigrations } = await import('./migrations');
   const { applyMetadata } = await import('./metadata');
 
   // wait for hasura to be ready
   await waitForHasura();
+  await waitForDatabase()
   // apply migrations and metadata
   await applyMigrations();
   await applyMetadata();
