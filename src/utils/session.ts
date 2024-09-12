@@ -1,4 +1,4 @@
-import { Session, SignInResponse } from '@/types';
+import { Session, SignInResponse, User } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { UserFieldsFragment } from './__generated__/graphql-request';
 import { ENV } from './env';
@@ -7,6 +7,7 @@ import { createHasuraAccessToken } from './jwt';
 import { getNewRefreshToken, updateRefreshTokenExpiry } from './refresh-token';
 import { generateTicketExpiresAt } from './ticket';
 import { getUser } from './user';
+import database from './database';
 
 /**
  * Get new or update current user session
@@ -22,13 +23,19 @@ export const getNewOrUpdateCurrentSession = async ({
   currentRefreshToken?: string;
 }): Promise<Session> => {
   // update user's last seen
-  gqlSdk.updateUser({
-    id: user.id,
-    user: {
-      lastSeen: new Date(),
-    },
-  });
-  const sessionUser = await getUser({ userId: user.id });
+
+  database.query(`update auth.users set last_seen = NOW() where id = '${user.id}'`).catch(exp => {
+    console.error(exp)
+  })
+  // gqlSdk.updateUser({
+  //   id: user.id,
+  //   user: {
+  //     lastSeen: new Date(),
+  //   },
+  // });
+  // const sessionUser = await getUser({ userId: user.id });
+  let u : User = user as unknown as User;
+  u.roles = user.roles.map(r => r.role)
   const accessToken = await createHasuraAccessToken(user);
   const { refreshToken, id: refreshTokenId } =
     (currentRefreshToken &&
@@ -39,7 +46,7 @@ export const getNewOrUpdateCurrentSession = async ({
     accessTokenExpiresIn: ENV.AUTH_ACCESS_TOKEN_EXPIRES_IN,
     refreshToken,
     refreshTokenId,
-    user: sessionUser,
+    user: u,
   };
 };
 
@@ -53,10 +60,7 @@ export const getSignInResponse = async ({
   checkMFA: boolean;
 }): Promise<SignInResponse> => {
   if (!user) {
-    const _res = await gqlSdk.user({
-      id: userId,
-    });
-    user = _res?.user;
+    user = await getUser({ userId, });
   }
   if (!user) {
     throw new Error('No user');
