@@ -77,6 +77,7 @@ export const signInOtpHandler: RequestHandler<
 
     const signInResponse = await getSignInResponse({
       userId: user.id,
+      user,
       checkMFA: true,
     });
 

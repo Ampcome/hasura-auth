@@ -45,14 +45,19 @@ export const getNewOrUpdateCurrentSession = async ({
 
 export const getSignInResponse = async ({
   userId,
+  user,
   checkMFA,
 }: {
   userId: string;
+  user?: any,
   checkMFA: boolean;
 }): Promise<SignInResponse> => {
-  const { user } = await gqlSdk.user({
-    id: userId,
-  });
+  if (!user) {
+    const _res = await gqlSdk.user({
+      id: userId,
+    });
+    user = _res?.user;
+  }
   if (!user) {
     throw new Error('No user');
   }

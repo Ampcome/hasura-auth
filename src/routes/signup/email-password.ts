@@ -43,6 +43,7 @@ export const signUpEmailPasswordHandler: RequestHandler<
 
   const signInResponse = await getSignInResponse({
     userId: user.id,
+    user,
     checkMFA: false,
   });
 
