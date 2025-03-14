@@ -16,15 +16,15 @@ export const start = async () => {
   //   logger.info(`Skipping migrations and metadata`);
   // } else {
   const { waitForHasura, waitForDatabase } = await import('@/utils');
-  const { applyMigrations } = await import('./migrations');
-  const { applyMetadata } = await import('./metadata');
+  // const { applyMigrations } = await import('./migrations');
+  // const { applyMetadata } = await import('./metadata');
 
   // wait for hasura to be ready
   await waitForHasura();
   await waitForDatabase()
   // apply migrations and metadata
-  await applyMigrations();
-  await applyMetadata();
+  // await applyMigrations();
+  // await applyMetadata();
   // }
 
   // * Insert missing default allowed roles into the database
