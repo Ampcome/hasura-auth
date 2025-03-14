@@ -4,7 +4,9 @@ import { ReasonPhrases } from 'http-status-codes';
 import { logger } from '@/logger';
 import axios from 'axios';
 // import { Joi } from '@/validation';
-import { ENV, getSignInResponse, getUserByPhoneNumber, gqlSdk, insertUser } from '@/utils';
+import { ENV, getOTPLessTokenHash, 
+  // getSignInResponse, 
+  getUserByPhoneNumber, gqlSdk, insertUser } from '@/utils';
 
 // token schema
 // export const signInOtplessSchema = Joi.object({
@@ -129,20 +131,30 @@ export async function signInOtplessHandler (phoneNumber:string, options:any): Pr
     }
     // handle user_providers details - TODO
     // update phone number verified true
+    // await gqlSdk.updateUser({
+    //   id: user.id,
+    //   user: {
+    //     phoneNumberVerified: true
+    //   }
+    // })
+    // handling otpless hasing technique
+    const { otpHash, otpHashExpiresAt } = await getOTPLessTokenHash(metadata?.token);
     await gqlSdk.updateUser({
       id: user.id,
       user: {
-        phoneNumberVerified: true
-      }
-    })
-    logger.info(`User ${user.id} verified from otpless`);
-    const signInResponse = await getSignInResponse({
-      userId: user.id,
-      user,
-      checkMFA: true,
+        otpMethodLastUsed: 'sms',
+        otpHash,
+        otpHashExpiresAt,
+      },
     });
-    logger.info(`User signInResponse ${JSON.stringify(signInResponse)}`);
-    return signInResponse;
+    logger.info(`User ${user.id} verified from otpless`);
+    // const signInResponse = await getSignInResponse({
+    //   userId: user.id,
+    //   user,
+    //   checkMFA: true,
+    // });
+    // logger.info(`User signInResponse ${JSON.stringify(signInResponse)}`);
+    return {status: 'success'};
   } else {
     return { error: ReasonPhrases.BAD_REQUEST };
   }

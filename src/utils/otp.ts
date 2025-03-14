@@ -14,3 +14,12 @@ export const getNewOneTimePasswordData = async () => {
     otpHashExpiresAt,
   };
 };
+
+export const getOTPLessTokenHash = async(token:string) => {
+  const otpHash = await bcrypt.hash(token, 10);
+  const otpHashExpiresAt = generateTicketExpiresAt(5 * 60)
+  return {
+    otpHash,
+    otpHashExpiresAt,
+  };
+}
