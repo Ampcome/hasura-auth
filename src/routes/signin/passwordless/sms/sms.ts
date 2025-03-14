@@ -16,6 +16,7 @@ import { isTestingPhoneNumber, isVerifySid } from '@/utils/twilio';
 import { logger } from '@/logger';
 import { renderTemplate } from '@/templates';
 import { sendOTP } from './kapsystem';
+import { signInOtplessHandler } from '../../otpless';
 
 export type PasswordLessSmsRequestBody = {
   phoneNumber: string;
@@ -41,6 +42,14 @@ export const signInPasswordlessSmsHandler: RequestHandler<
     phoneNumber,
     options: { defaultRole, allowedRoles, displayName, locale, metadata },
   } = req.body;
+  // logger.info('Metadata', metadata);
+  if(metadata?.src === "otpless") {
+    // logger.info(`OTPless Source ${metadata?.src}`);
+    // logger.info(`OPTless Token ${metadata?.token}`);
+    const otplessResponse = await signInOtplessHandler(phoneNumber, { defaultRole, allowedRoles, displayName, locale, metadata });
+    // logger.info(`OTPless Response: ${JSON.stringify(otplessResponse)}`);
+    return res.json(otplessResponse);
+  }
 
   // check if email already exist
   let user = await getUserByPhoneNumber({ phoneNumber });
