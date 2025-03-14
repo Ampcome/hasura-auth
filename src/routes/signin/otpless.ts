@@ -135,13 +135,13 @@ export async function signInOtplessHandler (phoneNumber:string, options:any): Pr
         phoneNumberVerified: true
       }
     })
-    // logger.info(`User ${user.id} verified from otpless`);
+    logger.info(`User ${user.id} verified from otpless`);
     const signInResponse = await getSignInResponse({
       userId: user.id,
       user,
       checkMFA: true,
     });
-    // logger.info(`User signInResponse ${JSON.stringify(signInResponse)}`);
+    logger.info(`User signInResponse ${JSON.stringify(signInResponse)}`);
     return signInResponse;
   } else {
     return { error: ReasonPhrases.BAD_REQUEST };

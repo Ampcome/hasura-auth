@@ -48,7 +48,11 @@ export const signInPasswordlessSmsHandler: RequestHandler<
     // logger.info(`OPTless Token ${metadata?.token}`);
     const otplessResponse = await signInOtplessHandler(phoneNumber, { defaultRole, allowedRoles, displayName, locale, metadata });
     // logger.info(`OTPless Response: ${JSON.stringify(otplessResponse)}`);
-    return res.json(otplessResponse);
+    if(otplessResponse?.error) {
+      return sendError(res, otplessResponse.error);
+    }
+    // return res.json(otplessResponse);
+    return res.json(ReasonPhrases.OK);
   }
 
   // check if email already exist
