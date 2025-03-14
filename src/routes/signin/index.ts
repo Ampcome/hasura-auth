@@ -23,7 +23,7 @@ import {
   signInWebauthnHandler,
   signInWebauthnSchema,
 } from './webauthn';
-import { signInOtplessHandler, signInOtplessSchema } from './otpless';
+// import { signInOtplessHandler, signInOtplessSchema } from './otpless';
 
 const router = Router();
 
@@ -172,11 +172,11 @@ router.post(
 //   bodyValidator(signInMfaSmsSchema),
 //   aw(signInMfaSmsHandler)
 // );
-router.post(
-  '/signin/otpless',
-  bodyValidator(signInOtplessSchema),
-  aw(signInOtplessHandler)
-);
+// router.post(
+//   '/signin/otpless',
+//   bodyValidator(signInOtplessSchema),
+//   aw(signInOtplessHandler)
+// );
 
 const signInRouter = router;
 export { signInRouter };
