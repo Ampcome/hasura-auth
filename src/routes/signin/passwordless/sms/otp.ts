@@ -6,6 +6,8 @@ import { sendError } from '@/errors';
 import { Joi, phoneNumber } from '@/validation';
 import { isTestingPhoneNumber, isVerifySid } from '@/utils/twilio';
 import twilio from 'twilio';
+import { logger } from '@/logger';
+import { verifyOTPLess } from '../../otpless';
 
 export type OtpSmsRequestBody = {
   phoneNumber: string;
@@ -65,6 +67,16 @@ export const signInOtpHandler: RequestHandler<
   if (!user || !user.otpHash) {
     return sendError(res, 'invalid-otp');
   }
+  logger.info(`User: ${JSON.stringify(user)}`);
+  if(user.metadata?.src === 'otpless') {
+    logger.info("entering otpless verification")
+    const verify_response:any = await verifyOTPLess(user.id,user.metadata?.otpless_request_id,user.otpHash, otp,user);
+    if(verify_response?.status) {
+      return res.send(verify_response?.response);
+    } else {
+      return sendError(res, 'invalid-otp');
+    }
+  }
 
   async function verifyPhoneNumberAndSignIn() {
     await gqlSdk.updateUser({
@@ -80,7 +92,7 @@ export const signInOtpHandler: RequestHandler<
       user,
       checkMFA: true,
     });
-
+    logger.info(`OTPLESS Sign in response: ${JSON.stringify(signInResponse)}`);
     return res.send(signInResponse);
   }
 

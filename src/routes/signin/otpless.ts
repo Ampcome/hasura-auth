@@ -1,10 +1,11 @@
 // import { RequestHandler } from 'express';
 import { ReasonPhrases } from 'http-status-codes';
-// import bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import { logger } from '@/logger';
 import axios from 'axios';
 // import { Joi } from '@/validation';
 import { ENV, getOTPLessTokenHash,
+  getSignInResponse,
   // getSignInResponse,
   getUserByPhoneNumber, gqlSdk, insertUser } from '@/utils';
 
@@ -205,9 +206,13 @@ export async function signInOtplessHandler (phoneNumber:string, options:any): Pr
     await gqlSdk.updateUser({
       id: user.id,
       user: {
-        otpMethodLastUsed: 'otpless',
+        otpMethodLastUsed: 'sms',
         otpHash,
         otpHashExpiresAt,
+        metadata: {
+          ...metadata,
+          otpless_request_id: trigger_magic_link?.data?.requestId
+        }
       },
     });
     logger.info(`User ${user.id} verified from otpless`);
@@ -216,3 +221,48 @@ export async function signInOtplessHandler (phoneNumber:string, options:any): Pr
     return { error: ReasonPhrases.BAD_REQUEST }
   }
 };
+
+export async function verifyOTPLess(user_id:string,requestId:string,otp_hash:string,otp:string,user:any) {
+  // TODO: verify otpless code
+  const verify_otpless:any = await axios({
+    method:"post",
+    url:"https://auth.otpless.app/auth/v1/verify/otp",
+    headers:{
+      "Content-Type": "application/json",
+      "clientId":process.env.AUTH_OTPLESS_CLIENT_ID,
+      "clientSecret":process.env.AUTH_OTPLESS_CLIENT_SECRET
+    },
+    data:{
+      "requestId": requestId,
+      "otp": otp
+    }
+  })
+  logger.info(`Verify otpless: ${JSON.stringify(verify_otpless?.data)}`);
+    if(verify_otpless?.data?.isOTPVerified) {
+      // TODO: compare the requestId with the otp_hash
+      if(await bcrypt.compare(requestId, otp_hash)) {
+        // async function verifyPhoneNumberAndSignIn() {
+          await gqlSdk.updateUser({
+            id: user_id,
+            user: {
+              otpHash: null,
+              phoneNumberVerified: true,
+            },
+          });
+
+          const signInResponse = await getSignInResponse({
+            userId: user_id,
+            user,
+            checkMFA: true,
+          });
+          logger.info(`OTPLESS Sign in response: ${JSON.stringify(signInResponse)}`);
+          return {status:true,response:signInResponse};
+        // }
+        // return "sign in response"
+      } else {
+        return { status:false };
+      }
+  } else {
+    return { status:false };
+  }
+}
