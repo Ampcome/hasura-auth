@@ -7,7 +7,7 @@ import { createHasuraAccessToken } from './jwt';
 import { getNewRefreshToken, updateRefreshTokenExpiry } from './refresh-token';
 import { generateTicketExpiresAt } from './ticket';
 import { getUser } from './user';
-import database from './database';
+// import database from './database';
 
 /**
  * Get new or update current user session
