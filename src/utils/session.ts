@@ -7,7 +7,7 @@ import { createHasuraAccessToken } from './jwt';
 import { getNewRefreshToken, updateRefreshTokenExpiry } from './refresh-token';
 import { generateTicketExpiresAt } from './ticket';
 import { getUser } from './user';
-// import database from './database';
+import database from './database';
 
 /**
  * Get new or update current user session
@@ -24,9 +24,9 @@ export const getNewOrUpdateCurrentSession = async ({
 }): Promise<Session> => {
   // update user's last seen
 
-  // database.query(`update auth.users set last_seen = NOW() where id = '${user.id}'`).catch(exp => {
-  //   console.error(exp)
-  // })
+  database.query(`update auth.users set last_seen = NOW() where id = '${user.id}'`).catch(exp => {
+    console.error(exp)
+  })
   // gqlSdk.updateUser({
   //   id: user.id,
   //   user: {
