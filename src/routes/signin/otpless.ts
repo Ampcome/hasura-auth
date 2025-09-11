@@ -242,11 +242,20 @@ export async function verifyOTPLess(user_id:string,requestId:string,otp_hash:str
       // TODO: compare the requestId with the otp_hash
       if(await bcrypt.compare(requestId, otp_hash)) {
         // async function verifyPhoneNumberAndSignIn() {
+        // TODO: cleanup the metadata realted to otpless and keep other keys in metadata - refer script
+        function cleanupMetadata(metadata: Record<string, any>): Record<string, any> {
+  const notAllowedKeys = new Set(["src", "channel", "otpless_request_id"]);
+
+  return Object.fromEntries(
+    Object.entries(metadata).filter(([key]) => !notAllowedKeys.has(key))
+  );
+}
           await gqlSdk.updateUser({
             id: user_id,
             user: {
               otpHash: null,
               phoneNumberVerified: true,
+              metadata:cleanupMetadata(user?.metadata)
             },
           });
 
