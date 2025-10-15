@@ -206,7 +206,7 @@ export async function signInOtplessHandler (phoneNumber:string, options:any): Pr
     await gqlSdk.updateUser({
       id: user.id,
       user: {
-        otpMethodLastUsed: 'sms',
+        otpMethodLastUsed: 'otpless',
         otpHash,
         otpHashExpiresAt,
         metadata: {

@@ -41,11 +41,11 @@ export const signInOtpHandler: RequestHandler<
               _eq: phoneNumber,
             },
           },
-          {
-            otpMethodLastUsed: {
-              _eq: 'sms',
-            },
-          },
+          // {
+          //   otpMethodLastUsed: {
+          //     _eq: 'sms',
+          //   },
+          // },
           {
             otpHashExpiresAt: {
               _gt: new Date(),
@@ -68,7 +68,8 @@ export const signInOtpHandler: RequestHandler<
     return sendError(res, 'invalid-otp');
   }
   logger.info(`User: ${JSON.stringify(user)}`);
-  if(user.metadata?.src === 'otpless') {
+  // if(user.metadata?.src === 'otpless') {
+  if(user.otpMethodLastUsed === 'otpless') {
     logger.info("entering otpless verification")
     const verify_response:any = await verifyOTPLess(user.id,user.metadata?.otpless_request_id,user.otpHash, otp,user);
     if(verify_response?.status) {
