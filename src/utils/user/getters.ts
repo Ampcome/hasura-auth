@@ -105,7 +105,7 @@ where u.ticket = '${ticket}' and u.ticket_expires_at > NOW()`)
 };
 
 // get hmac tokens
-export const getHmacTokens = async(token: string) => {
+export const getHmacTokens = async(token: any) => {
   let response_token: any = { is_exist: false }
   // call query
   const _res = await database.query(`select * from hmac_tokens ht where ht.token = ${token} limit 1`)

@@ -19,7 +19,7 @@ import { logger } from '@/logger';
 import { renderTemplate } from '@/templates';
 import { sendOTP } from './kapsystem';
 import { signInOtplessHandler } from '../../otpless';
-import * as jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken"
 
 export type PasswordLessSmsRequestBody = {
   phoneNumber: string;
@@ -47,7 +47,7 @@ export const signInPasswordlessSmsHandler: RequestHandler<
   } = req.body;
   // logger.info('Metadata', metadata);
   // TODO: handling token management
-  const passwordless_token:string = metadata?.token ?? ''
+  const passwordless_token:any = metadata?.token ?? ''
   if(!passwordless_token) {
     return sendError(res,'passwordless-token-missing')
   }
@@ -62,7 +62,7 @@ export const signInPasswordlessSmsHandler: RequestHandler<
     return sendError(res,'passwordless-token-used')
   }
   // decode the token
-  const decode:any = jwt.verify(passwordless_token,ENV.HASURA_GRAPHQL_JWT_SECRET)
+  const decode:any = jwt.verify(passwordless_token,ENV.HASURA_GRAPHQL_JWT_SECRET.key)
   const nonce = decode?.nonce
   if(token_response?.nonce !== nonce) {
     return sendError(res,'passwordless-verification-failed')
