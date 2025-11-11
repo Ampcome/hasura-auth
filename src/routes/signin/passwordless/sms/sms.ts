@@ -47,7 +47,7 @@ export const signInPasswordlessSmsHandler: RequestHandler<
   } = req.body;
   // logger.info('Metadata', metadata);
   // TODO: handling token management
-  const passwordless_token = metadata?.token
+  const passwordless_token:string = metadata?.token ?? ''
   if(!passwordless_token) {
     return sendError(res,'passwordless-token-missing')
   }
