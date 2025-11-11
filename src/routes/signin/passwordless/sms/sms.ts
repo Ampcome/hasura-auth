@@ -48,6 +48,7 @@ export const signInPasswordlessSmsHandler: RequestHandler<
   // logger.info('Metadata', metadata);
   // TODO: handling token management
   const passwordless_token:any = metadata?.token ?? ''
+  console.log("passwordless_token",passwordless_token)
   if(!passwordless_token) {
     return sendError(res,'passwordless-token-missing')
   }
@@ -67,6 +68,7 @@ export const signInPasswordlessSmsHandler: RequestHandler<
   if(token_response?.nonce !== nonce) {
     return sendError(res,'passwordless-verification-failed')
   }
+  console.log("token_response",token_response)
   // end
 
   if(metadata?.src === "otpless") {
@@ -79,6 +81,7 @@ export const signInPasswordlessSmsHandler: RequestHandler<
     }
     // handle passwordless token used
     await updateHmacTokens(token_response?.nonce)
+    console.log("token update success")
     // return res.json(otplessResponse);
     return res.json(ReasonPhrases.OK);
   }
@@ -136,6 +139,7 @@ export const signInPasswordlessSmsHandler: RequestHandler<
       console.log('kap res', JSON.stringify(kres));
       // handle passwordless token used
       await updateHmacTokens(token_response?.nonce)
+    console.log("token update success")
     } catch (error: any) {
       logger.error('Error sending sms');
       logger.error(error);
