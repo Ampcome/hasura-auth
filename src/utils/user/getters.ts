@@ -106,9 +106,11 @@ where u.ticket = '${ticket}' and u.ticket_expires_at > NOW()`)
 
 // get hmac tokens
 export const getHmacTokens = async(token: any) => {
+  console.log("parsing token",token)
   let response_token: any = { is_exist: false }
   // call query
-  const _res = await database.query(`select * from hmac_tokens ht where ht.token = ${token} limit 1`)
+  const _res = await database.query('select * from auth.hmac_tokens ht where ht.token = $1',[token])
+  console.log("response_rows",_res.rows[0],_res.rows)
   if(_res.rowCount === 1) {
     response_token = {
       is_exist: true,
@@ -119,6 +121,6 @@ export const getHmacTokens = async(token: any) => {
 }
 
 export const updateHmacTokens = async(nonce: string) => {
-  await database.query(`update hmac_tokens set is_used = true where nonce = ${nonce}`)
+  await database.query('update auth.hmac_tokens set is_used = true where nonce = $1',[nonce])
   return true
 }
