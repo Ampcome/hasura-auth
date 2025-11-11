@@ -103,3 +103,22 @@ where u.ticket = '${ticket}' and u.ticket_expires_at > NOW()`)
   return user;
 
 };
+
+// get hmac tokens
+export const getHmacTokens = async(token: string) => {
+  let response_token: any = { is_exist: false }
+  // call query
+  const _res = await database.query(`select * from hmac_tokens ht where ht.token = ${token} limit 1`)
+  if(_res.rowCount === 1) {
+    response_token = {
+      is_exist: true,
+      ..._res.rows[0]
+    }
+  }
+  return response_token
+}
+
+export const updateHmacTokens = async(nonce: string) => {
+  await database.query(`update hmac_tokens set is_used = true where nonce = ${nonce}`)
+  return true
+}

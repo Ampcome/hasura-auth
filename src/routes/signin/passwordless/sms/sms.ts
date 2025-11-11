@@ -9,6 +9,7 @@ import {
   getUserByPhoneNumber,
   insertUser,
   ENV,
+  getHmacTokens,
 } from '@/utils';
 import { sendError } from '@/errors';
 import { Joi, phoneNumber, registrationOptions } from '@/validation';
@@ -17,6 +18,7 @@ import { logger } from '@/logger';
 import { renderTemplate } from '@/templates';
 import { sendOTP } from './kapsystem';
 import { signInOtplessHandler } from '../../otpless';
+import * as jwt from "jsonwebtoken"
 
 export type PasswordLessSmsRequestBody = {
   phoneNumber: string;
@@ -43,6 +45,29 @@ export const signInPasswordlessSmsHandler: RequestHandler<
     options: { defaultRole, allowedRoles, displayName, locale, metadata },
   } = req.body;
   // logger.info('Metadata', metadata);
+  // TODO: handling token management
+  const passwordless_token = metadata?.token
+  if(!passwordless_token) {
+    return sendError(res,'passwordless-token-missing')
+  }
+  if(!ENV.HASURA_GRAPHQL_JWT_SECRET) {
+    return sendError(res,'invalid-webauthn-security-key')
+  }
+  const token_response = await getHmacTokens(passwordless_token)
+  if(!token_response?.is_exist) {
+    return sendError(res,'forbidden-anonymous')
+  }
+  if(token_response?.is_used) {
+    return sendError(res,'passwordless-token-used')
+  }
+  // decode the token
+  const decode:any = jwt.verify(passwordless_token,ENV.HASURA_GRAPHQL_JWT_SECRET)
+  const nonce = decode?.nonce
+  if(token_response?.nonce !== nonce) {
+    return sendError(res,'passwordless-verification-failed')
+  }
+  // end
+
   if(metadata?.src === "otpless") {
     // logger.info(`OTPless Source ${metadata?.src}`);
     // logger.info(`OPTless Token ${metadata?.token}`);
@@ -51,6 +76,8 @@ export const signInPasswordlessSmsHandler: RequestHandler<
     if(otplessResponse?.error) {
       return sendError(res, otplessResponse.error);
     }
+    // handle passwordless token used
+    await updateHmacTokens(token_response?.nonce)
     // return res.json(otplessResponse);
     return res.json(ReasonPhrases.OK);
   }
@@ -106,6 +133,8 @@ export const signInPasswordlessSmsHandler: RequestHandler<
       // const message = `Here is your OTP to acccess MYCENTA - ${otp}`;
       const kres = await sendOTP(phoneNumber, otp);
       console.log('kap res', JSON.stringify(kres));
+      // handle passwordless token used
+      await updateHmacTokens(token_response?.nonce)
     } catch (error: any) {
       logger.error('Error sending sms');
       logger.error(error);

@@ -147,6 +147,18 @@ export const ERRORS = asErrors({
     status: StatusCodes.INTERNAL_SERVER_ERROR,
     message: 'Invalid OAuth configuration',
   },
+  'passwordless-token-missing': {
+    status: StatusCodes.BAD_REQUEST,
+    message:"Secret key is Missing"
+  },
+  'passwordless-token-used': {
+    status: StatusCodes.BAD_REQUEST,
+    message:"Token is already used"
+  },
+  'passwordless-verification-failed': {
+    status: StatusCodes.BAD_REQUEST,
+    message: "Passwordless token verification failed"
+  }
 });
 
 export const sendError = (
