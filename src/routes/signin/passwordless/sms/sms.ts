@@ -10,6 +10,7 @@ import {
   insertUser,
   ENV,
   getHmacTokens,
+  updateHmacTokens,
 } from '@/utils';
 import { sendError } from '@/errors';
 import { Joi, phoneNumber, registrationOptions } from '@/validation';
