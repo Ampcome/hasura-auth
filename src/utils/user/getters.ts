@@ -1,6 +1,7 @@
 import { User } from '@/types';
 // import { gqlSdk } from '../gql-sdk';
 import database from '../database';
+import { logger } from '../../logger';
 
 export const getUserByPhoneNumber = async ({
   phoneNumber,
@@ -123,4 +124,24 @@ export const getHmacTokens = async(token: any) => {
 export const updateHmacTokens = async(nonce: string) => {
   await database.query('update auth.hmac_tokens set is_used = true where nonce = $1',[nonce])
   return true
+}
+
+// check if a phone number is blocked (country-code / format insensitive)
+export const getActivePhoneBlock = async (phoneNumber: string) => {
+  try {
+    logger.info(`[phone-block] checking phoneNumber=${phoneNumber}`)
+    const _res = await database.query(
+      `select * from auth.phone_block_list
+       where active = true
+         and right(regexp_replace(phone_number, '\\D', '', 'g'), 10)
+           = right(regexp_replace($1, '\\D', '', 'g'), 10)
+       limit 1`,
+      [phoneNumber]
+    )
+    logger.info(`[phone-block] matched rows=${_res.rowCount}`)
+    return _res.rowCount && _res.rowCount > 0 ? _res.rows[0] : null
+  } catch (error) {
+    logger.error('[phone-block] query failed', error)
+    throw error // surfaces as HTTP 500 via serverErrors instead of hanging silently
+  }
 }

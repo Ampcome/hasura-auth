@@ -158,6 +158,10 @@ export const ERRORS = asErrors({
   'passwordless-verification-failed': {
     status: StatusCodes.BAD_REQUEST,
     message: "Passwordless token verification failed"
+  },
+  'phone-number-blocked': {
+    status: StatusCodes.FORBIDDEN,
+    message: 'This phone number is blocked',
   }
 });
 

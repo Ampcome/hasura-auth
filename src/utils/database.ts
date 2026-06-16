@@ -5,6 +5,8 @@ import { logger } from '../logger';
 const dbConfig: PoolConfig = {
     connectionString: ENV.HASURA_GRAPHQL_DATABASE_URL,
     connectionTimeoutMillis: 5000,
+    query_timeout: 10000,
+    statement_timeout: 10000,
     max: 10
 };
 
